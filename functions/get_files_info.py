@@ -1,5 +1,6 @@
 import os
 from config import MAX_CHARS
+import subprocess
 
 def get_files_info(working_directory, directory="."):
     absolute_working_path = os.path.abspath(working_directory)
@@ -74,3 +75,49 @@ def write_file(working_directory, file_path, content):
         f.write(content)
     
     return f'Successfully wrote to "{file_path}" ({len(content)} characters written)'
+
+def run_python_file(working_directory, file_path, args=[]):
+
+    absolute_working_path = os.path.abspath(working_directory)
+    absolute_file_path = os.path.abspath(os.path.join(working_directory, file_path))
+
+    if not absolute_file_path.startswith(absolute_working_path):
+        return f'Error: Cannot execute "{file_path}" as it is outside the permitted working directory'
+    
+    if not file_path.endswith('.py'):
+        return f'Error: "{file_path}" is not a Python file.'
+    
+    if not os.path.exists(file_path):
+        return f'Error: File "{file_path}" not found.'
+
+    try:
+    
+        result = subprocess.run(
+                        ['python', file_path] + args,
+                        cwd=absolute_working_path,       
+                        capture_output=True,
+                        timeout=30,
+                        text=True
+        )
+
+        stdout = result.stdout
+        stderr = result.stderr
+
+        output = ''
+
+        if stdout:
+            output += f'STDOUT: {stdout}\n'
+
+        if stderr:
+            output += f'STDERR: {stderr}\n'
+
+        if result.returncode != 0:
+            output += f'Process exited with code {result.returncode}'
+
+        if not stderr and not stdout:
+            output = 'No output produced.'
+        
+        return output
+        
+    except Exception as e:
+        return f'Error {str(e)}'
