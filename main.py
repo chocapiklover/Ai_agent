@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 import sys
-from functions.tools import available_functions
+from functions.tools import available_functions, call_function
 from config import system_prompt
 
 load_dotenv()
@@ -34,6 +34,7 @@ def main():
     )
 
     if len(sys.argv) >= 3 and sys.argv[2] == '--verbose':
+        verbose = True
         print(f"User prompt: {user_prompt}")
         print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
         print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
@@ -41,13 +42,16 @@ def main():
     function_call = response.function_calls
     if function_call:
         for function_call_part in function_call:
-            print(f"Calling function: {function_call_part.name}({function_call_part.args})")
+            result = call_function(function_call_part)
+            response_content = result.parts[0].function_response.response
 
-    else:
-        print(response.text)
-
-    
-
+        if not response_content:
+            raise Exception("fatal error")
+        
+        print(response_content)
+        
+        if verbose:
+            print(f"-> {response_content}")
 
 if __name__ == "__main__":
     main()
