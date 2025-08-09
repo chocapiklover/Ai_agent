@@ -8,7 +8,6 @@ from config import system_prompt
 
 load_dotenv()
 api_key = os.environ.get("GEMINI_API_KEY")
-
 client = genai.Client(api_key=api_key)
 
 def main():
@@ -25,33 +24,51 @@ def main():
         )
     ]
 
-    response = client.models.generate_content(
-        model='gemini-2.0-flash-001',
-        contents=messages,
-        config=types.GenerateContentConfig(
-            tools=[available_functions],
-            system_instruction=system_prompt),
-    )
-
+    verbose = False
     if len(sys.argv) >= 3 and sys.argv[2] == '--verbose':
         verbose = True
-        print(f"User prompt: {user_prompt}")
-        print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
-        print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
 
-    function_call = response.function_calls
-    if function_call:
-        for function_call_part in function_call:
-            result = call_function(function_call_part)
-            response_content = result.parts[0].function_response.response
+    for tries in range(20):
+        try:
+            response = client.models.generate_content(
+                model='gemini-2.0-flash-001',
+                contents=messages,
+                config=types.GenerateContentConfig(
+                    tools=[available_functions],
+                    system_instruction=system_prompt),
+            )
 
-        if not response_content:
-            raise Exception("fatal error")
-        
-        print(response_content)
-        
-        if verbose:
-            print(f"-> {response_content}")
+            if verbose:
+                print(f"User prompt: {user_prompt}")
+                print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
+                print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
 
+            if response.candidates:
+                for candidate in response.candidates:
+                    messages.append(candidate.content)
+
+            function_call = response.function_calls
+            response_content = None
+            if function_call:
+                for function_call_part in function_call:
+                    result = call_function(function_call_part, verbose=verbose)
+                    messages.append(result)
+
+                    response_content = result.parts[0].function_response.response
+
+                if not response_content:
+                    raise Exception("fatal error")
+
+                if verbose:
+                    print(f"-> {response_content}")
+
+            if not function_call and response.text:
+                print(response.text)
+                break
+
+        except Exception as e:
+            print(f'Error: {str(e)}')
+            
+                
 if __name__ == "__main__":
     main()
