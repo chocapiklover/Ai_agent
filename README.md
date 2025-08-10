@@ -20,18 +20,16 @@ This project is an AI-powered agent that can process natural language prompts, u
    cd Ai_agent
    ```
 
-2. (Optional but recommended) Create and activate a virtual environment:
+2. (Optional but recommended) Create and activate a uv virtual environment:
    ```bash
-   python3 -m venv venv
-   # On Unix/macOS:
-   source venv/bin/activate
-   # On Windows:
-   venv\Scripts\activate
+    uv venv
+    source .venv/bin/activate   # On macOS/Linux
+    .venv\Scripts\activate      # On Windows
    ```
 
 3. Install dependencies:
    ```bash
-   pip install -r requirements.txt
+   uv pip install -r requirements.txt
    ```
 
 4. Create a `.env` file in the project root directory and add your Google Gemini API key:
@@ -44,6 +42,8 @@ This project is an AI-powered agent that can process natural language prompts, u
 To run the AI agent, use the following command:
 ```bash
 python main.py "Your prompt here"
+ or
+uv run python main.py "Your prompt here"
 ```
 
 To enable verbose mode for debugging and detailed output:

@@ -1,6 +1,6 @@
 from google.genai import types
 
-from functions.get_files_info import get_file_content, get_files_info, run_python_file, write_file
+from functions.file_utils import get_file_content, get_files_info, run_python_file, write_file
 from functions.schemas import schema_get_files_info, schema_get_file_content, schema_run_python_file, schema_write_file
 
 
